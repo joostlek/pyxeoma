@@ -1,0 +1,7 @@
+__pycache__/
+dist/
+MANIFEST
+
+# intellij
+.idea/
+*.iml
