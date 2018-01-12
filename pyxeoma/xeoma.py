@@ -26,6 +26,17 @@ class Xeoma():
         self._new_version = new_version
 
     @asyncio.coroutine
+    def async_test_connection(self):
+        try:
+            with aiohttp.ClientSession() as session:
+                resp = yield from session.get(self._base_url, timeout=5)
+                assert resp.status == 200
+        except asyncio.TimeoutError:
+            raise XeomaError('Connection to Xeoma server timed out')
+        except AssertionError:
+            raise XeomaError('Received bad response from Xeoma server')
+
+    @asyncio.coroutine
     def async_get_camera_image(self, image_name):
         """
             Grab a single image from the Xeoma web server
@@ -71,6 +82,28 @@ class Xeoma():
             else:
                 data = None
         return data
+
+    @asyncio.coroutine
+    def async_get_image_names(self):
+        """
+            Parse web server camera view for camera image names
+        """
+
+        self._cookie = yield from self.get_session_cookie()
+        params = {}
+        try:
+            with aiohttp.ClientSession(cookies=self._cookie) as session:
+                resp = yield from session.get(
+                    self._base_url,
+                    params=params
+                )
+                t = yield from resp.text()
+                match = re.findall('(?:\w|\d)/(.*?).(?:mjpg|jpg)', t)
+                if len(match) == 0:
+                    raise XeomaError('Unable to find any camera image names')
+                return set(match)
+        except asyncio.TimeoutError as e:
+            raise XeomaError("Unable to connect to Xeoma web server")
 
     @asyncio.coroutine
     def async_get_session_key(self):
