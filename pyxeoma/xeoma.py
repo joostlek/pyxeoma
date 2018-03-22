@@ -17,14 +17,10 @@ class Xeoma():
                 password: the Xeoma web server password
         """
 
-        if base_url[-1] == '/':
-            self._base_url = base_url[:-1]
-        else:
-            self._base_url = base_url
+        self._base_url = base_url.rstrip('/')
         self._login = login
         self._password = password
 
-    @asyncio.coroutine
     async def async_test_connection(self):
         try:
             async with aiohttp.ClientSession() as session:
@@ -35,7 +31,6 @@ class Xeoma():
         except AssertionError:
             raise XeomaError('Received bad response from Xeoma server')
 
-    @asyncio.coroutine
     async def async_get_camera_image(self, image_name, username=None, password=None):
         """
             Grab a single image from the Xeoma web server
@@ -58,7 +53,6 @@ class Xeoma():
         except aiohttp.ClientError as e:
             raise XeomaError('Unable to fetch image: {}'.format(e))
 
-    @asyncio.coroutine
     async def async_fetch_image_data(self, image_name, username, password):
         """
             Fetch image data from the Xeoma web server
@@ -85,7 +79,6 @@ class Xeoma():
                 data = None
         return data
 
-    @asyncio.coroutine
     async def async_get_image_names(self):
         """
             Parse web server camera view for camera image names
@@ -93,7 +86,7 @@ class Xeoma():
 
         cookies = self.get_session_cookie()
         try:
-            with aiohttp.ClientSession(cookies=cookies) as session:
+            async with aiohttp.ClientSession(cookies=cookies) as session:
                 resp = await session.get(
                     self._base_url
                 )
