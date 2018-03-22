@@ -25,10 +25,10 @@ class Xeoma():
         self._password = password
 
     @asyncio.coroutine
-    def async_test_connection(self):
+    async def async_test_connection(self):
         try:
-            with aiohttp.ClientSession() as session:
-                resp = yield from session.get(self._base_url, timeout=5)
+            async with aiohttp.ClientSession() as session:
+                resp = await session.get(self._base_url, timeout=5)
                 assert resp.status == 200
         except asyncio.TimeoutError:
             raise XeomaError('Connection to Xeoma server timed out')
@@ -36,7 +36,7 @@ class Xeoma():
             raise XeomaError('Received bad response from Xeoma server')
 
     @asyncio.coroutine
-    def async_get_camera_image(self, image_name, username=None, password=None):
+    async def async_get_camera_image(self, image_name, username=None, password=None):
         """
             Grab a single image from the Xeoma web server
 
@@ -47,7 +47,7 @@ class Xeoma():
         """
 
         try:
-            data = yield from self.async_fetch_image_data(
+            data = await self.async_fetch_image_data(
                 image_name, username, password)
             if data is None:
                 raise XeomaError('Unable to authenticate with Xeoma web '
@@ -59,7 +59,7 @@ class Xeoma():
             raise XeomaError('Unable to fetch image: {}'.format(e))
 
     @asyncio.coroutine
-    def async_fetch_image_data(self, image_name, username, password):
+    async def async_fetch_image_data(self, image_name, username, password):
         """
             Fetch image data from the Xeoma web server
 
@@ -74,19 +74,19 @@ class Xeoma():
             params['user'] = self.encode_user(username, password)
         else:
             params['user'] = ''
-        with aiohttp.ClientSession(cookies=cookies) as session:
-            resp = yield from session.get(
+        async with aiohttp.ClientSession(cookies=cookies) as session:
+            resp = await session.get(
                 '{}/{}.jpg'.format(self._base_url, image_name),
                 params=params
             )
             if resp.headers['Content-Type'] == 'image/jpeg':
-                data = yield from resp.read()
+                data = await resp.read()
             else:
                 data = None
         return data
 
     @asyncio.coroutine
-    def async_get_image_names(self):
+    async def async_get_image_names(self):
         """
             Parse web server camera view for camera image names
         """
@@ -94,10 +94,10 @@ class Xeoma():
         cookies = self.get_session_cookie()
         try:
             with aiohttp.ClientSession(cookies=cookies) as session:
-                resp = yield from session.get(
+                resp = await session.get(
                     self._base_url
                 )
-                t = yield from resp.text()
+                t = await resp.text()
                 match = re.findall('(?:\w|\d)/(.*?).(?:mjpg|jpg)', t)
                 if len(match) == 0:
                     raise XeomaError('Unable to find any camera image names')
