@@ -10,9 +10,10 @@ setup(
     url='https://github.com/jeradM/pyxeoma',
     download_url='https://github.com/jeradM/pyxeoma/archive/1.4.2.tar.gz',
     keywords=['Xeoma'],
-    license='MIT',
     install_requires=[
         'aiohttp'
     ],
-    classifiers=[]
+    classifiers=[
+        'License :: OSI Approved :: MIT License'
+    ]
 )
